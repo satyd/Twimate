@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Twimate</string>
+    <string name="app_name_y">y</string>
+    <string name="app_name_i">й</string>
+    <string name="app_name_n">н</string>
+    <string name="app_name_ya">я</string>
+</resources>
