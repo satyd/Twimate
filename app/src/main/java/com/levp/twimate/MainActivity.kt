@@ -8,41 +8,28 @@ import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.util.Log
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,20 +47,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
-import coil.size.Scale
-import coil.size.Size
 import com.levp.twimate.ui.theme.TwimateTheme
 import kotlinx.coroutines.delay
-import java.lang.Exception
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 
@@ -122,7 +103,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressWarnings("MagicNumber")
 object Values {
-    const val minHeight = 48
+    const val minHeight = 56
     const val maxHeight = 120
 }
 
@@ -147,24 +128,16 @@ fun XRow(onClick: () -> Unit) {
     )*/
     var resource by remember { mutableStateOf(R.drawable.twitter_img) }
     var painter = painterResource(id = resource)
-    var isRunning by remember { mutableStateOf(true) }
     var isAlive by remember { mutableStateOf(true) }
-    suspend fun runAnimation() {
-        while (isRunning) {
-            delay(1534) // set here your delay between animations
+
+    LaunchedEffect(key1 = isAlive) {
+        launch {
+            delay(1434)
             resource = R.drawable.twitter_dead
-            /*if(isAlive) {
-                isAlive = !isAlive
-                resource = R.drawable.twitter_dead
-            } else {
-                resource = R.drawable.twitter_dead
-            }*/
-            delay(4466)
+            delay(4566)
             resource = R.drawable.twitter_img
+            isAlive = !isAlive
         }
-    }
-    LaunchedEffect(key1 = painter) {
-        runAnimation()
     }
     val size by infiniteTransition.animateFloat(
         initialValue = startHeight,
@@ -208,7 +181,11 @@ fun XRow(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(Values.maxHeight.dp)
-            .paint(painter, contentScale = ContentScale.Inside, alignment = Alignment.BottomCenter),
+            .paint(
+                painter = painter,
+                contentScale = ContentScale.Inside,
+                alignment = Alignment.BottomCenter
+            ),
         verticalAlignment = Alignment.Bottom
     ) {
         IconButton(
@@ -253,10 +230,6 @@ fun GifImage(
         .build()
     val imageRequest = ImageRequest.Builder(context)
         .data(data = R.raw.muskg)
-        /*.apply(block = {
-            size(screenWidth, screenHeight)
-        })*/
-        //.scale(Scale.FILL)
         .build()
     val resHeight = 480 * screenWidth / 600
     Image(
