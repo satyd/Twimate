@@ -15,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateValue
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +51,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -64,8 +69,10 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
+import coil.size.Scale
 import coil.size.Size
 import com.levp.twimate.ui.theme.TwimateTheme
+import kotlinx.coroutines.delay
 import java.lang.Exception
 import kotlin.math.roundToInt
 
@@ -113,17 +120,52 @@ class MainActivity : ComponentActivity() {
 
 }
 
+@SuppressWarnings("MagicNumber")
 object Values {
-    val minHeight = 48
-    val maxHeight = 120
+    const val minHeight = 48
+    const val maxHeight = 120
 }
 
 @Composable
+@SuppressWarnings("MagicNumber", "FunctionNaming", "LongMethod")
 fun XRow(onClick: () -> Unit) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
     val infiniteTransition = rememberInfiniteTransition()
     val startHeight = Values.minHeight.toFloat()
+    /*val drawable by infiniteTransition.animateValue(
+        initialValue = R.drawable.twitter_img,
+        targetValue = R.drawable.twitter_dead,
+        typeConverter = ,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 6000
+                R.drawable.twitter_dead.toFloat() at 1534
+            },
+            repeatMode = RepeatMode.Restart
+        )
+    )*/
+    var resource by remember { mutableStateOf(R.drawable.twitter_img) }
+    var painter = painterResource(id = resource)
+    var isRunning by remember { mutableStateOf(true) }
+    var isAlive by remember { mutableStateOf(true) }
+    suspend fun runAnimation() {
+        while (isRunning) {
+            delay(1534) // set here your delay between animations
+            resource = R.drawable.twitter_dead
+            /*if(isAlive) {
+                isAlive = !isAlive
+                resource = R.drawable.twitter_dead
+            } else {
+                resource = R.drawable.twitter_dead
+            }*/
+            delay(4466)
+            resource = R.drawable.twitter_img
+        }
+    }
+    LaunchedEffect(key1 = painter) {
+        runAnimation()
+    }
     val size by infiniteTransition.animateFloat(
         initialValue = startHeight,
         targetValue = Values.maxHeight.toFloat(),
@@ -147,15 +189,16 @@ fun XRow(onClick: () -> Unit) {
         )
     )
     val offset by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.65f,
+        initialValue = 0.18f,
+        targetValue = 0.69f,
         animationSpec = infiniteRepeatable(
             animation = keyframes {
                 durationMillis = 6000
-                0.2f at 1000
-                0.55f at 1500
-                0.75f at 2000
-                0.85f at 2500
+                0.18f at 1034
+                0.3f at 1234
+                0.5f at 1534
+                0.85f at 1934
+                0.88f at 2100
                 0.85f at 3500
             },
             repeatMode = RepeatMode.Restart
@@ -164,7 +207,8 @@ fun XRow(onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(Values.maxHeight.dp),
+            .height(Values.maxHeight.dp)
+            .paint(painter, contentScale = ContentScale.Inside, alignment = Alignment.BottomCenter),
         verticalAlignment = Alignment.Bottom
     ) {
         IconButton(
@@ -180,7 +224,8 @@ fun XRow(onClick: () -> Unit) {
             Icon(
                 painter = painterResource(id = R.drawable.x),
                 contentDescription = null,
-                tint = Color.Unspecified
+                tint = Color.Unspecified,
+                modifier = Modifier.fillMaxSize()
             )
         }
         Spacer(modifier = Modifier.size(4.dp))
@@ -192,6 +237,11 @@ fun GifImage(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    val screenHeight = configuration.screenHeightDp
+    val density = configuration.densityDpi
+    Log.d("hehe", "w = $screenWidth, h = $screenHeight, d = $density")
     val imageLoader = ImageLoader.Builder(context)
         .components {
             if (SDK_INT >= 28) {
@@ -201,32 +251,21 @@ fun GifImage(
             }
         }
         .build()
+    val imageRequest = ImageRequest.Builder(context)
+        .data(data = R.raw.muskg)
+        /*.apply(block = {
+            size(screenWidth, screenHeight)
+        })*/
+        //.scale(Scale.FILL)
+        .build()
+    val resHeight = 480 * screenWidth / 600
     Image(
-        painter = rememberAsyncImagePainter(
-            ImageRequest.Builder(context)
-                .data(data = R.raw.muskg)
-                .apply(block = {
-                    size(Size.ORIGINAL)
-                })
-                .build(), imageLoader = imageLoader
-        ),
+        painter = rememberAsyncImagePainter(imageRequest, imageLoader = imageLoader),
         contentDescription = null,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(resHeight.dp),
     )
-}
-
-@Composable
-fun BackupStartButton(onClick: () -> Unit) {
-    Button(onClick = onClick) {
-        Text(text = "Start")
-        Spacer(modifier = Modifier.width(4.dp))
-        Icon(
-            modifier = Modifier.size(18.dp),
-            painter = painterResource(id = R.drawable.x),
-            contentDescription = null,
-            tint = Color.Unspecified
-        )
-    }
 }
 
 fun Context.riskyStartTwitter() {
